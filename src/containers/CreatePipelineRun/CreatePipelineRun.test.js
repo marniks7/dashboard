@@ -14,7 +14,7 @@ limitations under the License.
 import React from 'react';
 import { fireEvent } from '@testing-library/react';
 
-import { renderWithRouter } from '../../utils/test';
+import {render, renderWithRouter} from '../../utils/test';
 
 import CreatePipelineRun from './CreatePipelineRun';
 import * as API from '../../api';
@@ -61,6 +61,23 @@ const pipelines = [
       uid: 'id-pipeline-3'
     },
     spec: {}
+  },
+  {
+    metadata: {
+      name: 'pipeline-4',
+      namespace: 'namespace-1',
+      uid: 'id-pipeline-4'
+    },
+    spec: {
+      params: [
+        {
+          name: 'param-1',
+          description: 'description-1',
+          default: 'default-1'
+        },
+        { name: 'param-2' }
+      ]
+    }
   }
 ];
 
