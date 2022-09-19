@@ -22,6 +22,7 @@ source $(dirname $0)/e2e-common.sh
 
 # Script entry point.
 
+ARTIFACTS="${ARTIFACTS:-`mktemp -d`}"
 SED="sed"
 START=1
 END=30
@@ -136,6 +137,7 @@ test_dashboard() {
   VIDEO_PATH=$ARTIFACTS/videos
   mkdir -p $VIDEO_PATH
   chmod -R 777 $VIDEO_PATH
+  echo "Videos of failing tests will be stored at $VIDEO_PATH"
   # In case of failure we'll upload videos of the failing tests
   # Our Cypress config will delete videos of passing tests before exiting
   if [[ "$readonly" == true ]]; then
