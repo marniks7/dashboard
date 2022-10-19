@@ -168,8 +168,7 @@ func NewProxyHandler(apiProxyPrefix string, cfg *rest.Config, keepalive time.Dur
 	if err != nil {
 		return nil, err
 	}
-	interceptorTransport := endpoints.NewK8sInterceptor(transport, target)
-	proxy := proxy.NewUpgradeAwareHandler(target, interceptorTransport, false, false, responder)
+	proxy := proxy.NewUpgradeAwareHandler(target, transport, false, false, responder)
 	proxy.UpgradeTransport = upgradeTransport
 	proxy.UseRequestLocation = true
 	proxy.UseLocationHost = true
