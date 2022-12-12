@@ -15,7 +15,7 @@ import React from 'react';
 
 import { fireEvent, waitFor } from '@testing-library/react';
 import { renderWithRouter } from '../../utils/test';
-import { CreateYAMLEditor } from './YAMLEditor';
+import { CreateYAMLEditor, generateNewPipelineRun } from './YAMLEditor';
 import * as PipelineRunsAPI from '../../api/pipelineRuns';
 
 const submitButton = allByText => allByText('Create')[0];
@@ -63,6 +63,33 @@ const pipelineRunRaw = {
   apiVersion: 'tekton.dev/v1beta1',
   kind: 'PipelineRun',
   metadata: { name: 'test-pipeline-run-name', namespace: 'test-namespace' },
+  spec: {
+    pipelineSpec: {
+      tasks: [
+        {
+          name: 'hello',
+          taskSpec: {
+            steps: [
+              {
+                image: 'busybox',
+                name: 'echo',
+                script: '#!/bin/ash\necho "Hello World!"\n'
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+};
+
+const pipelineRunRawGenerateName = {
+  apiVersion: 'tekton.dev/v1beta1',
+  kind: 'PipelineRun',
+  metadata: {
+    generateName: 'test-pipeline-run-name',
+    namespace: 'test-namespace'
+  },
   spec: {
     pipelineSpec: {
       tasks: [
@@ -210,5 +237,160 @@ describe('YAMLEditor', () => {
     await waitFor(() => {
       expect(getByText(/Error creating PipelineRun/)).toBeTruthy();
     });
+  });
+});
+
+describe('YAML. Edit and Run', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(window.history, 'pushState');
+    // Workaround for codemirror vs jsdom https://github.com/jsdom/jsdom/issues/3002#issuecomment-1118039915
+    // for textRange(...).getClientRects is not a function
+    Range.prototype.getBoundingClientRect = () => ({
+      bottom: 0,
+      height: 0,
+      left: 0,
+      right: 0,
+      top: 0,
+      width: 0
+    });
+    Range.prototype.getClientRects = () => ({
+      item: () => null,
+      length: 0,
+      [Symbol.iterator]: jest.fn()
+    });
+  });
+  it('handle submit pipelinerun input pipelinerun', async () => {
+    jest
+      .spyOn(PipelineRunsAPI, 'createPipelineRunRaw')
+      .mockImplementation(() => Promise.resolve({ data: {} }));
+    jest
+      .spyOn(PipelineRunsAPI, 'usePipelineRun')
+      .mockImplementation(() => ({ data: pipelineRunRawGenerateName }));
+
+    const { queryAllByText } = renderWithRouter(<CreateYAMLEditor />);
+
+    expect(submitButton(queryAllByText)).toBeTruthy();
+
+    fireEvent.click(submitButton(queryAllByText));
+
+    await waitFor(() => {
+      expect(PipelineRunsAPI.createPipelineRunRaw).toHaveBeenCalledTimes(1);
+    });
+    expect(PipelineRunsAPI.createPipelineRunRaw).toHaveBeenCalledWith(
+      expect.objectContaining({
+        namespace: 'test-namespace',
+        payload: pipelineRunRawGenerateName
+      })
+    );
+    await waitFor(() => {
+      expect(window.history.pushState).toHaveBeenCalledTimes(2);
+    });
+  });
+  it('generate new pipeline run minimum', () => {
+    const pr = {
+      apiVersion: 'tekton.dev/v1beta1',
+      kind: 'PipelineRun',
+      metadata: {
+        name: 'test',
+        namespace: 'test2'
+      },
+      spec: {
+        pipelineRef: {
+          name: 'simple'
+        }
+      }
+    };
+    const actual = generateNewPipelineRun(pr);
+    const expected = `apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  namespace: test2
+  generateName: test-r-
+spec:
+  pipelineRef:
+    name: simple
+`;
+    expect(actual).toEqual(expected);
+  });
+  it('generate new pipeline run maximum', () => {
+    const pr = {
+      apiVersion: 'tekton.dev/v1beta1',
+      kind: 'PipelineRun',
+      metadata: {
+        annotations: {
+          keya: 'valuea',
+          'kubectl.kubernetes.io/last-applied-configuration': {
+            keya: 'valuea'
+          }
+        },
+        labels: {
+          keyl: 'valuel',
+          key2: 'value2'
+        },
+        name: 'test',
+        namespace: 'test2',
+        uid: '111-233-33',
+        resourceVersion: 'aaaa'
+      },
+      spec: {
+        pipelineRef: {
+          name: 'simple'
+        },
+        params: [{ name: 'param-1' }, { name: 'param-2' }]
+      },
+      status: { startTime: '0' }
+    };
+    const actual = generateNewPipelineRun(pr);
+    const expected = `apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations:
+    keya: valuea
+  labels:
+    keyl: valuel
+    key2: value2
+  namespace: test2
+  generateName: test-r-
+spec:
+  pipelineRef:
+    name: simple
+  params:
+    - name: param-1
+    - name: param-2
+`;
+    expect(actual).toEqual(expected);
+  });
+  it('generate new pipeline run last applied configuration should be removed', () => {
+    const pr = {
+      apiVersion: 'tekton.dev/v1beta1',
+      kind: 'PipelineRun',
+      metadata: {
+        annotations: {
+          'kubectl.kubernetes.io/last-applied-configuration': {
+            keya: 'valuea'
+          }
+        },
+        name: 'test',
+        namespace: 'test2'
+      },
+      spec: {
+        pipelineRef: {
+          name: 'simple'
+        }
+      }
+    };
+    const actual = generateNewPipelineRun(pr);
+    const expected = `apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  annotations: {}
+  namespace: test2
+  generateName: test-r-
+spec:
+  pipelineRef:
+    name: simple
+`;
+    expect(actual).toEqual(expected);
   });
 });

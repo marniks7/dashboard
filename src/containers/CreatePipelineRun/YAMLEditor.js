@@ -11,7 +11,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { useIntl } from 'react-intl';
-import { ALL_NAMESPACES, urls } from '@tektoncd/dashboard-utils';
+import {
+  ALL_NAMESPACES,
+  getGenerateNamePrefixForRerun,
+  urls
+} from '@tektoncd/dashboard-utils';
 import {
   Button,
   Form,
@@ -23,21 +27,92 @@ import React, { useState } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { yaml as codeMirrorYAML } from '@codemirror/legacy-modes/mode/yaml';
-import { useNavigate } from 'react-router-dom-v5-compat';
-import { createPipelineRunRaw, useSelectedNamespace } from '../../api';
+import { useLocation, useNavigate } from 'react-router-dom-v5-compat';
+import deepClone from 'lodash.clonedeep';
+import {
+  createPipelineRunRaw,
+  usePipelineRun,
+  useSelectedNamespace
+} from '../../api';
+
+export function generateNewPipelineRun(pipelineRun) {
+  const pipelineRunObj = deepClone(pipelineRun);
+  const { labels, annotations, namespace } = pipelineRunObj.metadata;
+
+  if (!pipelineRunObj.metadata.generateName) {
+    pipelineRunObj.metadata.generateName = getGenerateNamePrefixForRerun(
+      pipelineRunObj.metadata.name
+    );
+  }
+  if (pipelineRunObj.metadata.annotations) {
+    delete pipelineRunObj.metadata.annotations[
+      'kubectl.kubernetes.io/last-applied-configuration'
+    ];
+  }
+  pipelineRunObj.metadata = {
+    annotations,
+    labels,
+    namespace,
+    generateName: pipelineRunObj.metadata.generateName
+  };
+  Object.keys(pipelineRunObj.metadata).forEach(
+    i =>
+      pipelineRunObj.metadata[i] === undefined &&
+      delete pipelineRunObj.metadata[i]
+  );
+
+  if (pipelineRunObj.status) {
+    delete pipelineRunObj.status;
+  }
+
+  return yaml.safeDump(pipelineRunObj);
+}
 
 export function CreateYAMLEditor({ code: initialCode = '' }) {
   const intl = useIntl();
   const navigate = useNavigate();
+  const location = useLocation();
   const { selectedNamespace } = useSelectedNamespace();
 
-  const [{ code, isCreating, submitError, validationErrorMessage }, setState] =
-    useState({
-      code: initialCode,
-      isCreating: false,
-      submitError: '',
-      validationErrorMessage: ''
-    });
+  function getPipelineRunName() {
+    const urlSearchParams = new URLSearchParams(location.search);
+    return urlSearchParams.get('pipelineRunName') || '';
+  }
+
+  function getNamespace() {
+    const urlSearchParams = new URLSearchParams(location.search);
+    return (
+      urlSearchParams.get('namespace') ||
+      (selectedNamespace !== ALL_NAMESPACES ? selectedNamespace : '')
+    );
+  }
+  let code;
+  const [
+    {
+      isCreating,
+      submitError,
+      validationErrorMessage,
+      pipelineRunName,
+      pipelineRunNamespace
+    },
+    setState
+  ] = useState({
+    code: initialCode,
+    isCreating: false,
+    submitError: '',
+    validationErrorMessage: '',
+    pipelineRunNamespace: getNamespace(),
+    pipelineRunName: getPipelineRunName()
+  });
+
+  const { data: pipelineRunObj } = usePipelineRun(
+    { name: pipelineRunName, namespace: pipelineRunNamespace },
+    { enabled: !!pipelineRunName }
+  );
+
+  if (pipelineRunObj) {
+    code = generateNewPipelineRun(pipelineRunObj);
+  }
 
   function validateNamespace(obj) {
     if (!obj?.metadata?.namespace) {
@@ -124,10 +199,7 @@ export function CreateYAMLEditor({ code: initialCode = '' }) {
   }
 
   function onChange(newValue, _viewUpdate) {
-    setState(state => ({
-      ...state,
-      code: newValue
-    }));
+    code = newValue;
   }
 
   function resetError() {
