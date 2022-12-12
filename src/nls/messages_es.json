@@ -95,6 +95,7 @@
     "dashboard.deleteResources.heading": "Suprimir {kind}",
     "dashboard.deleteRun.body": "",
     "dashboard.deleteTaskRun.body": "",
+    "dashboard.editAndRun.actionText": "",
     "dashboard.emptyState.allNamespaces": "No se ha encontrado ninguna {kind}",
     "dashboard.emptyState.clusterResource": "",
     "dashboard.emptyState.selectedNamespace": "No se ha encontrado ninguna {kind}",

@@ -95,6 +95,7 @@
     "dashboard.deleteResources.heading": "Delete {kind}",
     "dashboard.deleteRun.body": "Are you sure you would like to delete Run {name}?",
     "dashboard.deleteTaskRun.body": "Are you sure you would like to delete TaskRun {name}?",
+    "dashboard.editAndRun.actionText": "Edit and Run",
     "dashboard.emptyState.allNamespaces": "No matching {kind} found",
     "dashboard.emptyState.clusterResource": "No matching {kind} found",
     "dashboard.emptyState.selectedNamespace": "No matching {kind} found in namespace {selectedNamespace}",

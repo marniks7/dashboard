@@ -95,6 +95,7 @@
     "dashboard.deleteResources.heading": "{kind}を削除",
     "dashboard.deleteRun.body": "",
     "dashboard.deleteTaskRun.body": "TaskRun {name}を削除してもよろしいですか？",
+    "dashboard.editAndRun.actionText": "",
     "dashboard.emptyState.allNamespaces": "すべてのNamespaceに{kind}がありません",
     "dashboard.emptyState.clusterResource": "{kind}がありません",
     "dashboard.emptyState.selectedNamespace": "{selectedNamespace} Namespaceに{kind}がありません",

@@ -95,6 +95,7 @@
     "dashboard.deleteResources.heading": "刪除 {kind}",
     "dashboard.deleteRun.body": "",
     "dashboard.deleteTaskRun.body": "",
+    "dashboard.editAndRun.actionText": "",
     "dashboard.emptyState.allNamespaces": "找不到 {kind}",
     "dashboard.emptyState.clusterResource": "",
     "dashboard.emptyState.selectedNamespace": "找不到 {kind}",

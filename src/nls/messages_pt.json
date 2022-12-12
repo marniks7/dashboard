@@ -95,6 +95,7 @@
     "dashboard.deleteResources.heading": "Excluir o {kind}",
     "dashboard.deleteRun.body": "",
     "dashboard.deleteTaskRun.body": "",
+    "dashboard.editAndRun.actionText": "",
     "dashboard.emptyState.allNamespaces": "Nenhum {kind} localizado",
     "dashboard.emptyState.clusterResource": "",
     "dashboard.emptyState.selectedNamespace": "Nenhum {kind} localizado",

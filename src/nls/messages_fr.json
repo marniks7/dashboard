@@ -95,6 +95,7 @@
     "dashboard.deleteResources.heading": "Suppression des {kind}",
     "dashboard.deleteRun.body": "",
     "dashboard.deleteTaskRun.body": "",
+    "dashboard.editAndRun.actionText": "",
     "dashboard.emptyState.allNamespaces": "{kind} introuvable",
     "dashboard.emptyState.clusterResource": "",
     "dashboard.emptyState.selectedNamespace": "{kind} introuvable",
