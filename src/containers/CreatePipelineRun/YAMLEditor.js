@@ -86,7 +86,7 @@ export function CreateYAMLEditor({ code: initialCode = '' }) {
       (selectedNamespace !== ALL_NAMESPACES ? selectedNamespace : '')
     );
   }
-  let code;
+
   const [
     {
       isCreating,
@@ -97,7 +97,6 @@ export function CreateYAMLEditor({ code: initialCode = '' }) {
     },
     setState
   ] = useState({
-    code: initialCode,
     isCreating: false,
     submitError: '',
     validationErrorMessage: '',
@@ -106,12 +105,18 @@ export function CreateYAMLEditor({ code: initialCode = '' }) {
   });
 
   const { data: pipelineRunObj } = usePipelineRun(
-    { name: pipelineRunName, namespace: pipelineRunNamespace },
+    {
+      name: pipelineRunName,
+      namespace: pipelineRunNamespace
+    },
     { enabled: !!pipelineRunName }
   );
 
+  let code;
   if (pipelineRunObj) {
     code = generateNewPipelineRun(pipelineRunObj);
+  } else {
+    code = initialCode;
   }
 
   function validateNamespace(obj) {
