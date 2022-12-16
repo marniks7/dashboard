@@ -57,7 +57,7 @@ const initialState = {
   nodeSelector: [],
   params: {},
   paramSpecs: [],
-  pendingPipelineStatus: '',
+  pipelinePendingStatus: '',
   pipelineError: false,
   pipelineRef: '',
   pipelineRunName: '',

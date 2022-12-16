@@ -130,14 +130,6 @@ describe('CreatePipelineRun', () => {
     expect(queryByDisplayValue(/bar/i)).toBeFalsy();
   });
 
-  it('renders yaml mode', () => {
-    const { getByRole } = renderWithRouter(<CreatePipelineRun />, {
-      path: '/create',
-      route: '/create?mode=yaml'
-    });
-    expect(getByRole(/textbox/)).toBeTruthy();
-  });
-
   it('handles onClose event', () => {
     jest.spyOn(window.history, 'pushState');
     const { getByText } = renderWithRouter(<CreatePipelineRun />);
@@ -151,5 +143,58 @@ describe('CreatePipelineRun', () => {
     const { getByText } = renderWithRouter(<CreatePipelineRun />);
     fireEvent.click(getByText(/cancel/i));
     expect(window.history.pushState).toHaveBeenCalledTimes(2);
+  });
+});
+
+const initialPipelineRun = `apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: run-1111111111
+  namespace: test-namespace
+  labels: {}
+spec:
+  pipelineRef:
+    name: ''
+  status: ''`;
+// replace randomly generated date number to predefined value
+const replaceName = /name: run-\d+/;
+const initialPipelineRunOneLine = initialPipelineRun.replace(/\r?\n|\r/g, '');
+
+const initialPipelineRunWithEmptyNamespaceOneLine =
+  initialPipelineRunOneLine.replace(
+    'namespace: test-namespace',
+    'namespace: null'
+  );
+
+describe('CreatePipelineRun yaml mode', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    jest.spyOn(window.history, 'pushState');
+  });
+  it('renders yaml mode without any namespace', async () => {
+    const { getByRole } = renderWithRouter(<CreatePipelineRun />, {
+      path: '/create',
+      route: '/create?mode=yaml'
+    });
+
+    expect(getByRole(/textbox/)).toBeTruthy();
+    let actual = getByRole(/textbox/).textContent;
+
+    actual = actual.replace(replaceName, 'name: run-1111111111');
+
+    expect(actual).toEqual(initialPipelineRunWithEmptyNamespaceOneLine);
+  });
+
+  it('renders yaml mode with namespace', async () => {
+    const { getByRole } = renderWithRouter(<CreatePipelineRun />, {
+      path: '/create',
+      route: '/create?mode=yaml&namespace=test-namespace'
+    });
+
+    expect(getByRole(/textbox/)).toBeTruthy();
+    let actual = getByRole(/textbox/).textContent;
+    actual = actual.replace(replaceName, 'name: run-1111111111');
+    expect(actual).toEqual(initialPipelineRunOneLine);
   });
 });
